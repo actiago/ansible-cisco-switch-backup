@@ -1,0 +1,3 @@
+*.retry
+.editorconfig
+.pre-commit-config.yaml

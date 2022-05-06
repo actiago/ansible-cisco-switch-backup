@@ -1,0 +1,41 @@
+---
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Collect Year, Month and Day.
+      setup:
+        filter: "ansible_date_time"
+        gather_subset: "!all"
+    
+    - name: Put today's date in a variable.
+      set_fact:
+        DTG: "{{ ansible_date_time.date }}"
+
+    - name: Create directory.
+      file:
+        path: /sw-data /cisco-backups/bkp_{{ hostvars.localhost.DTG }}/
+        state: directory
+  run_once: true
+
+- hosts: cisco
+  gather_facts: false
+
+  tasks:
+    - name: Copy the configuration file of each CISCO Switch and put it in a .cfg file
+      ios_config:
+        backup: yes
+        backup_options:
+          filename: "{{ inventory_hostname }}.cfg"
+          dir_path: /sw-data /cisco-backups/bkp_{{ hostvars.localhost.DTG }}/
+
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Compact directory to a zip file.
+      archive:
+        path:
+          - /sw-data /cisco-backups/bkp_{{ hostvars.localhost.DTG }}/
+        dest: /sw-data /cisco-backup_{{ hostvars.localhost.DTG }}.zip
+        format: zip
